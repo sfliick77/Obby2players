@@ -1,500 +1,441 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Obby 3D - 2 Jogadores</title>
-    <style>
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            font-family: Arial, sans-serif;
-        } 
-        canvas { 
-            display: block; 
-        } 
-        #overlay { 
-            position: absolute; 
-            top:0; 
-            left:0; 
-            width:100%; 
-            height:100%; 
-            background: rgba(0,0,0,0.8); 
-            color: white; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            flex-direction: column; 
-            font-size: 24px; 
-            z-index: 10; 
-        } 
-        #info { 
-            position: absolute; 
-            top: 10px; 
-            left: 10px; 
-            color: #fff; 
-            font-size: 18px; 
-            text-shadow: 1px 1px 3px #000; 
-            display: none; 
-        } 
-        /* Menu de opções */ 
-        #menu-btn { 
-            position: absolute; 
-            top: 15px; 
-            right: 15px; 
-            background: rgba(0,0,0,0.6); 
-            color: white; 
-            border: 1px solid #fff; 
-            border-radius: 5px; 
-            padding: 8px 15px; 
-            cursor: pointer; 
-            z-index: 20; 
-            transition: background 0.3s; 
-        } 
-        #menu-btn:hover { 
-            background: rgba(0,0,0,0.8); 
-        } 
-        #options-menu { 
-            position: absolute; 
-            top: 50px; 
-            right: 15px; 
-            background: rgba(0,0,0,0.8); 
-            border: 1px solid #fff; 
-            border-radius: 5px; 
-            padding: 15px; 
-            color: white; 
-            z-index: 20; 
-            display: none; 
-            flex-direction: column; 
-            gap: 10px; 
-            min-width: 150px; 
-        } 
-        .menu-option { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            cursor: pointer; 
-        } 
-        .menu-option input[type="checkbox"] { 
-            margin: 0; 
-        }
-        .player-info {
-            position: absolute;
-            top: 10px;
-            padding: 5px 10px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 5px;
-            color: white;
-        }
-        #player1-info {
-            left: 10px;
-            border-left: 4px solid #ff5555;
-        }
-        #player2-info {
-            left: 200px;
-            border-left: 4px solid #5555ff;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini Obby 3D — 2 Jogadores</title>
+  <style>
+    :root { --ui: rgba(0,0,0,.8); --txt: #fff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; overflow: hidden; background:#000; font-family: Arial, Helvetica, sans-serif; }
+    canvas { display: block; }
+
+    /* Overlay inicial */
+    #overlay {
+      position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 18px; text-align: center; color: var(--txt); background: rgba(0,0,0,.85); z-index: 20; padding: 24px;
+    }
+    #overlay h1 { margin: 0; font-size: 28px; }
+    #overlay p { margin: 0; opacity: .9; }
+    .btn { cursor: pointer; padding: 10px 18px; border-radius: 8px; border: 1px solid #fff; background: var(--ui); color: #fff; font-size: 16px; }
+    .btn:hover { background: rgba(255,255,255,.12); }
+
+    /* HUD */
+    #info {
+      position: absolute; top: 10px; left: 10px; color: #fff; font-size: 16px; text-shadow: 0 1px 3px #000; display: none; z-index: 15;
+      background: rgba(0,0,0,.35); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.2);
+    }
+
+    /* Menu */
+    #menu-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,.6); color:#fff; border: 1px solid #fff; border-radius: 8px; padding: 8px 14px; cursor:pointer; z-index: 15; }
+    #menu-btn:hover { background: rgba(0,0,0,.8); }
+
+    #options-menu { position: absolute; top: 54px; right: 15px; background: rgba(0,0,0,.85); color:#fff; border: 1px solid #fff; border-radius: 10px; padding: 12px; display: none; flex-direction: column; gap: 10px; min-width: 200px; z-index: 15; }
+    .menu-option { display:flex; align-items:center; gap:8px; }
+
+    /* Mensagens */
+    #center-msg { position: absolute; left: 50%; top: 15%; transform: translateX(-50%); color:#fff; font-size: 18px; text-shadow: 0 1px 3px #000; z-index: 15; display: none; }
+  </style>
 </head>
 <body>
-    <div id="overlay">
-        <h1>🏃 Mini Obby 3D - 2 Jogadores</h1>
-        <p>Pressione ENTER para começar</p>
-        <div style="text-align: left; margin-top: 20px;">
-            <h3>Jogador 1 (Vermelho):</h3>
-            <p>WASD para mover, Espaço para pular</p>
-            <h3>Jogador 2 (Azul):</h3>
-            <p>Setas para mover, Enter (teclado numérico) para pular</p>
-        </div>
-    </div>
-    
-    <div id="player1-info" class="player-info">Jogador 1: 0/20</div>
-    <div id="player2-info" class="player-info">Jogador 2: 0/20</div>
-    
-    <button id="menu-btn">☰ Menu</button>
-    <div id="options-menu">
-        <label class="menu-option">
-            <input type="checkbox" id="lite-mode"> Modo Lite
-        </label>
-    </div>
+  <!-- Overlay inicial com botão Iniciar -->
+  <div id="overlay">
+    <h1>🏃 Mini Obby 3D — 2 Jogadores</h1>
+    <p>Jogador 1: <b>WASD</b> para mover, <b>Espaço</b> para pular.</p>
+    <p>Jogador 2: <b>Setas</b> para mover, <b>Enter</b> para pular.</p>
+    <button id="start-btn" class="btn">Iniciar</button>
+    <p style="opacity:.8">Dica: também funciona apertar <b>Espaço</b> ou <b>Enter</b>.</p>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        // --- Variáveis do jogo --- 
-        let gameStarted = false;
-        let gameOver = false;
-        let liteMode = false;
-        const overlay = document.getElementById('overlay');
-        const player1Info = document.getElementById('player1-info');
-        const player2Info = document.getElementById('player2-info');
-        const menuBtn = document.getElementById('menu-btn');
-        const optionsMenu = document.getElementById('options-menu');
-        const liteModeToggle = document.getElementById('lite-mode');
-        
-        // Menu toggle
-        menuBtn.addEventListener('click', () => {
-            optionsMenu.style.display = optionsMenu.style.display === 'flex' ? 'none' : 'flex';
-        });
-        
-        // Modo Lite
-        liteModeToggle.addEventListener('change', () => {
-            liteMode = liteModeToggle.checked;
-            applyLiteMode();
-        });
-        
-        function applyLiteMode() {
-            if (liteMode) {
-                player1Material.wireframe = true;
-                player2Material.wireframe = true;
-                platforms.forEach(platform => {
-                    platform.material.wireframe = true;
-                });
-                scene.background = null;
-                scene.background = new THREE.Color(0x222222);
-            } else {
-                player1Material.wireframe = false;
-                player2Material.wireframe = false;
-                platforms.forEach(platform => {
-                    platform.material.wireframe = false;
-                });
-                // Restaurar textura de fundo
-                loader.load(
-                    'https://raw.githubusercontent.com/sfliick77/Background-c-u/main/277fba7bc86484d9f6cf37c87ee44de2.jpg',
-                    function(texture){
-                        scene.background = texture;
-                    }
-                );
-            }
-        }
-        
-        // Sistema de teclas melhorado
-        const keys = {};
-        window.addEventListener('keydown', e => {
-            const key = e.key.toLowerCase();
-            keys[key] = true;
-            
-            // Começar jogo
-            if(!gameStarted && !gameOver && (key === "enter" || key === " ")){
-                startGame();
-            }
-            
-            // Reiniciar
-            if(gameOver && (key === "enter" || key === " ")){
-                restartGame();
-            }
-        });
-        
-        window.addEventListener('keyup', e => {
-            const key = e.key.toLowerCase();
-            keys[key] = false;
-        });
-        
-        // Prevenir comportamento padrão das teclas de direção e espaço
-        window.addEventListener('keydown', e => {
-            if([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) {
-                e.preventDefault();
-            }
-        });
-        
-        // --- Cena e câmera --- 
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({antialias:true});
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-        
-        // --- Fundo --- 
-        const loader = new THREE.TextureLoader();
-        loader.load(
-            'https://raw.githubusercontent.com/sfliick77/Background-c-u/main/277fba7bc86484d9f6cf37c87ee44de2.jpg',
-            function(texture){
-                scene.background = texture;
-            }
-        );
-        
-        // --- Luzes --- 
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(5,10,7);
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-        
-        // --- Jogadores (2% maior) --- 
-        // Jogador 1 (Vermelho)
-        const player1Geometry = new THREE.BoxGeometry(1.02, 1.02, 1.02);
-        const player1Material = new THREE.MeshStandardMaterial({color: 0xff5555});
-        const player1 = new THREE.Mesh(player1Geometry, player1Material);
-        player1.position.set(-2, 1, 0);
-        scene.add(player1);
-        
-        // Jogador 2 (Azul)
-        const player2Geometry = new THREE.BoxGeometry(1.02, 1.02, 1.02);
-        const player2Material = new THREE.MeshStandardMaterial({color: 0x5555ff});
-        const player2 = new THREE.Mesh(player2Geometry, player2Material);
-        player2.position.set(2, 1, 0);
-        scene.add(player2);
-        
-        // Propriedades dos jogadores
-        const players = [
-            {
-                mesh: player1,
-                velocity: { x: 0, y: 0, z: 0 },
-                canJump: false,
-                checkpoint: 0,
-                finished: false,
-                color: 0xff5555
-            },
-            {
-                mesh: player2,
-                velocity: { x: 0, y: 0, z: 0 },
-                canJump: false,
-                checkpoint: 0,
-                finished: false,
-                color: 0x5555ff
-            }
+  <div id="info"></div>
+  <div id="center-msg"></div>
+
+  <button id="menu-btn">☰ Menu</button>
+  <div id="options-menu">
+    <label class="menu-option"><input type="checkbox" id="lite-mode"> Modo Lite</label>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script>
+    // ======== Estado do jogo ========
+    let gameStarted = false;
+    let liteMode = false;
+
+    const overlay = document.getElementById('overlay');
+    const startBtn = document.getElementById('start-btn');
+    const info = document.getElementById('info');
+    const centerMsg = document.getElementById('center-msg');
+    const menuBtn = document.getElementById('menu-btn');
+    const optionsMenu = document.getElementById('options-menu');
+    const liteModeToggle = document.getElementById('lite-mode');
+
+    // ======== Entrada ========
+    const keys = {}; // mapa de teclas
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      keys[k] = true;
+      if (!gameStarted && (k === 'enter' || k === ' ')) startGame();
+      // impedir scroll
+      if([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
+    });
+    window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+    startBtn.addEventListener('click', startGame);
+
+    // ======== Menu ========
+    menuBtn.addEventListener('click', () => {
+      optionsMenu.style.display = optionsMenu.style.display === 'flex' ? 'none' : 'flex';
+    });
+    liteModeToggle.addEventListener('change', () => { liteMode = liteModeToggle.checked; applyLiteMode(); });
+
+    // ======== Three.js básico ========
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      'https://raw.githubusercontent.com/sfliick77/Background-c-u/main/277fba7bc86484d9f6cf37c87ee44de2.jpg',
+      (texture) => { scene.background = texture; },
+      undefined,
+      () => { scene.background = new THREE.Color(0x222222); }
+    );
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+
+    // ======== Util ========
+    function applyLiteMode(){
+      const wire = !!liteMode;
+      players.forEach(p => p.mesh.material.wireframe = wire);
+      [...platforms, ...movingPlatforms, ...fallingPlatforms, ...bouncePads, ...disappearPlatforms, ...lavaTiles].forEach(m => {
+        m.material.wireframe = wire;
+      });
+      if (wire) scene.background = new THREE.Color(0x222222);
+      else loader.load('https://raw.githubusercontent.com/sfliick77/Background-c-u/main/277fba7bc86484d9f6cf37c87ee44de2.jpg', tex => scene.background = tex);
+    }
+
+    function showCenterMsg(text, ms=1200){
+      centerMsg.textContent = text; centerMsg.style.display = 'block';
+      clearTimeout(showCenterMsg._t);
+      showCenterMsg._t = setTimeout(()=> centerMsg.style.display = 'none', ms);
+    }
+
+    // ======== Jogadores ========
+    const players = [];
+    const playerSize = 1.02;
+
+    function createPlayer(color, startX, startZ){
+      const geom = new THREE.BoxGeometry(playerSize, playerSize, playerSize);
+      const mat = new THREE.MeshStandardMaterial({ color });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(startX, 1, startZ);
+      scene.add(mesh);
+      return {
+        mesh,
+        vel: new THREE.Vector3(),
+        canJump: false,
+        respawn: new THREE.Vector3(startX, 1, startZ),
+        checkpointIdx: 0
+      };
+    }
+
+    const p1 = createPlayer(0xff5555, 0, 0); // vermelho
+    const p2 = createPlayer(0x5590ff, 2, 0); // azul
+    players.push(p1, p2);
+
+    // ======== Nivel / Obstáculos ========
+    const platforms = [];             // estáticas
+    const movingPlatforms = [];       // com movimento senoidal
+    const fallingPlatforms = [];      // caem quando pisadas
+    const disappearPlatforms = [];    // somem e voltam em ciclos
+    const bouncePads = [];            // trampolins
+    const lavaTiles = [];             // mata instantaneamente
+    const rotators = [];              // vigas giratórias (hazard)
+    const checkpoints = [];           // checkpoints
+
+    function mkBox(w, h, d, color){
+      const geo = new THREE.BoxGeometry(w, h, d);
+      const mat = new THREE.MeshStandardMaterial({ color });
+      const m = new THREE.Mesh(geo, mat);
+      scene.add(m); return m;
+    }
+
+    function createPlatform(x,y,z,w=3,d=3,color=0x4caf50){
+      const m = mkBox(w, .5, d, color); m.position.set(x,y,z); platforms.push(m); return m;
+    }
+    function createMovingPlatform({x,y,z,w=3,d=3,axis='x',amp=2,speed=1,color=0x8bc34a}){
+      const m = mkBox(w,.5,d,color); m.position.set(x,y,z);
+      movingPlatforms.push({mesh:m, base:new THREE.Vector3(x,y,z), axis, amp, speed});
+      return m;
+    }
+    function createFallingPlatform(x,y,z,w=3,d=3,color=0xffd54f){
+      const m = mkBox(w,.5,d,color); m.position.set(x,y,z);
+      fallingPlatforms.push({mesh:m, state:'idle', timer:0});
+      return m;
+    }
+    function createDisappearPlatform(x,y,z,w=3,d=3, period=2.2, duty=0.5, color=0x9e9e9e){
+      const m = mkBox(w,.5,d,color); m.position.set(x,y,z);
+      disappearPlatforms.push({mesh:m, period, duty, t0: performance.now()/1000});
+      return m;
+    }
+    function createBouncePad(x,y,z,w=3,d=3,color=0x2196f3){
+      const m = mkBox(w,.3,d,color); m.position.set(x,y,z); bouncePads.push(m); return m;
+    }
+    function createLava(x,y,z,w=3,d=3,color=0xe53935){
+      const m = mkBox(w,.2,d,color); m.position.set(x,y,z); lavaTiles.push(m); return m;
+    }
+    function createRotator(x,y,z,len=6,th=0.35,speed=1,color=0xff7043){
+      const m = mkBox(len, th, th, color); m.position.set(x,y,z);
+      m._rotSpeed = speed; rotators.push(m); return m;
+    }
+    function createCheckpoint(x,y,z){
+      // poste + base
+      const post = mkBox(0.4, 2.0, 0.4, 0x00e676); post.position.set(x, y+1.0, z);
+      const base = mkBox(1.6, 0.25, 1.6, 0x2e7d32); base.position.set(x, y+0.125, z);
+      const flag = mkBox(1.0, 0.6, 0.1, 0x00e676); flag.position.set(x+0.7, y+1.6, z);
+      const area = mkBox(2.8, 0.1, 2.8, 0x1b5e20); area.position.set(x, y+0.05, z); area.material.transparent=true; area.material.opacity=0.35;
+      checkpoints.push({x, y, z, marker:[post, base, flag, area]});
+      platforms.push(base); // base é sólida
+    }
+
+    // ----- Construção do nível (bem mais longo) -----
+    (function buildLevel(){
+      let x = 0, z = 0, y = 0;
+      const step = 4.2; // distância entre blocos
+
+      // bloco inicial
+      for (let i=0;i<3;i++) createPlatform(x + i*3, y, z, 3, 3, 0x66bb6a);
+      createCheckpoint(x+3, y, z);
+
+      // passarela com gaps e lava
+      x += 10;
+      for (let i=0;i<8;i++){
+        if (i%2===0) createPlatform(x + i*step, y, z, 3, 3, 0x66bb6a);
+        else createLava(x + i*step, y-0.15, z, 3, 3, 0xe53935);
+      }
+
+      // plataformas móveis (eixo X)
+      x += 8*step + 4;
+      for (let i=0;i<5;i++) createMovingPlatform({x: x + i*step, y, z, w:3, d:3, axis:'x', amp:2.2, speed: 0.9 + i*0.15});
+      createCheckpoint(x + 2*step, y, z);
+
+      // trampolins para uma elevação
+      x += 5*step + 4; y += 0.0;
+      for (let i=0;i<4;i++) createBouncePad(x + i*step, y, z, 3, 3, 0x2196f3);
+      // pouso mais alto
+      createPlatform(x + 4*step, y+2.2, z, 4, 4, 0x81c784); y += 2.2;
+
+      // plataformas que caem
+      x += 4*step + 4;
+      for (let i=0;i<6;i++) createFallingPlatform(x + i*step, y, z, 3, 3, 0xffd54f);
+      createCheckpoint(x + 3*step, y, z);
+
+      // viga giratória
+      x += 6*step + 6;
+      createPlatform(x, y, z, 4, 4, 0x66bb6a);
+      createRotator(x, y+1.2, z, 10, 0.4, 1.6, 0xff7043);
+      createPlatform(x + step, y, z, 4, 4, 0x66bb6a);
+
+      // plataformas que somem/aparecem em ciclo
+      x += step + 6;
+      for (let i=0;i<6;i++) createDisappearPlatform(x + i*step, y, z, 3, 3, 2 + i*0.3, 0.5, 0x9e9e9e);
+
+      // trecho final com lava e móveis no eixo Z
+      x += 6*step + 8;
+      for (let i=0;i<5;i++) createLava(x + i*step, y-0.15, z, 3, 3, 0xe53935);
+      x += 5*step + 4;
+      for (let i=0;i<5;i++) createMovingPlatform({x: x, y, z: z + (i-2)*step*0.8, w:3, d:3, axis:'z', amp:2.4, speed: 1.2});
+
+      // chegada
+      x += 12;
+      createCheckpoint(x, y, z);
+      createPlatform(x, y, z, 6, 6, 0x4db6ac);
+    })();
+
+    // ======== Lógica ========
+    function startGame(){
+      gameStarted = true; overlay.style.display = 'none'; info.style.display = 'block';
+      updateHUD();
+    }
+
+    function updateHUD(){
+      info.innerHTML = `Checkpoint P1: ${p1.checkpointIdx} | P2: ${p2.checkpointIdx}`;
+    }
+
+    function respawnPlayer(p){
+      p.mesh.position.copy(p.respawn);
+      p.mesh.position.y = p.respawn.y; // garantir y correto
+      p.vel.set(0,0,0);
+      p.canJump = false;
+    }
+
+    // Controle/Câmara
+    const moveSpeed = 0.12; // horizontal
+    const jumpSpeed = 0.82;
+    const gravity = 0.028;
+
+    function handleInput(){
+      // Player 1 — WASD + Espaço
+      if (keys['w']) p1.mesh.position.z -= moveSpeed;
+      if (keys['s']) p1.mesh.position.z += moveSpeed;
+      if (keys['a']) p1.mesh.position.x -= moveSpeed;
+      if (keys['d']) p1.mesh.position.x += moveSpeed;
+      if (keys[' '] && p1.canJump){ p1.vel.y = jumpSpeed; p1.canJump = false; }
+
+      // Player 2 — Setas + Enter
+      if (keys['arrowup']) p2.mesh.position.z -= moveSpeed;
+      if (keys['arrowdown']) p2.mesh.position.z += moveSpeed;
+      if (keys['arrowleft']) p2.mesh.position.x -= moveSpeed;
+      if (keys['arrowright']) p2.mesh.position.x += moveSpeed;
+      if (keys['enter'] && p2.canJump){ p2.vel.y = jumpSpeed; p2.canJump = false; }
+    }
+
+    function updatePhysics(p){
+      p.vel.y -= gravity; // gravidade
+      p.mesh.position.y += p.vel.y; // aplicar
+
+      // queda do mapa
+      if (p.mesh.position.y < -12){ respawnPlayer(p); }
+    }
+
+    // AABB helper para topo
+    function topCollision(playerMesh, platMesh){
+      const p = playerMesh.position, b = platMesh.position;
+      const w = platMesh.geometry.parameters.width/2;
+      const d = platMesh.geometry.parameters.depth/2;
+      const topY = b.y + 0.25; // metade da altura (.5)
+      const withinX = (p.x > b.x - w) && (p.x < b.x + w);
+      const withinZ = (p.z > b.z - d) && (p.z < b.z + d);
+      const fallingOnto = (p.y >= topY) && (p.y + playerSize*0.5 >= topY) && (p.y - p.vel.y <= topY + 0.05);
+      return withinX && withinZ && fallingOnto;
+    }
+
+    function standOn(p, mesh){
+      p.vel.y = 0; p.mesh.position.y = mesh.position.y + 0.26 + playerSize*0.5 - 0.51; // alinhar topo
+      p.canJump = true;
+    }
+
+    // ======== Loop ========
+    const tmpBoxP = new THREE.Box3();
+    const tmpBoxO = new THREE.Box3();
+
+    function animate(){
+      requestAnimationFrame(animate);
+      if (!gameStarted){ renderer.render(scene, camera); return; }
+
+      // atualizar ciclos
+      const t = performance.now()/1000;
+
+      // plataformas móveis
+      for (const m of movingPlatforms){
+        const prev = m.mesh.position.clone();
+        if (m.axis === 'x') m.mesh.position.x = m.base.x + Math.sin(t * m.speed) * m.amp;
+        else if (m.axis === 'z') m.mesh.position.z = m.base.z + Math.sin(t * m.speed) * m.amp;
+        else if (m.axis === 'y') m.mesh.position.y = m.base.y + Math.sin(t * m.speed) * m.amp;
+        m.mesh._delta = m.mesh.position.clone().sub(prev);
+      }
+
+      // plataformas que desaparecem (duty-cycle)
+      for (const d of disappearPlatforms){
+        const phase = ((t - d.t0) % d.period) / d.period; // 0..1
+        const on = phase < d.duty;
+        d.mesh.visible = on; // simples
+      }
+
+      // rotators
+      for (const r of rotators){ r.rotation.y += 0.02 * r._rotSpeed; }
+
+      // física e colisão por jogador
+      handleInput();
+      for (const p of players){
+        updatePhysics(p);
+
+        // colidir com plataformas sólidas (inclui algumas especiais visíveis)
+        const solids = [
+          ...platforms,
+          ...movingPlatforms.map(o=>o.mesh),
+          ...fallingPlatforms.map(o=>o.mesh),
+          ...disappearPlatforms.filter(o=>o.mesh.visible).map(o=>o.mesh)
         ];
-        
-        // --- Plataformas (2% maiores) --- 
-        const platforms = [];
-        const checkpoints = [];
-        const platformColors = [0x00ff00, 0xffff00, 0xff00ff, 0x00ffff];
-        
-        function createPlatform(x, y, z, width = 3.06, depth = 3.06, color = 0x00ff00) {
-            const geo = new THREE.BoxGeometry(width, 0.51, depth);
-            const mat = new THREE.MeshStandardMaterial({color: color});
-            const plat = new THREE.Mesh(geo, mat);
-            plat.position.set(x, y, z);
-            scene.add(plat);
-            platforms.push(plat);
-            return plat;
+        let stood = false;
+        for (const s of solids){
+          if (topCollision(p.mesh, s)){
+            standOn(p, s); stood = true;
+            // se for moving, empurrar junto um pouco
+            if (s._delta) { p.mesh.position.add(s._delta); }
+          }
         }
-        
-        // Criar plataformas tipo Obby com cores variando (2% mais distantes)
-        for(let i = 0; i < 20; i++) {
-            const x = i % 5 * 6;
-            const z = Math.floor(i / 5) * 6;
-            const color = platformColors[i % platformColors.length];
-            const platform = createPlatform(x, 0, z, 3.06, 3.06, color);
-            
-            // Marcar como checkpoint a cada 5 plataformas
-            if (i % 5 === 0 && i > 0) {
-                checkpoints.push(i);
+        if (!stood && p.vel.y <= 0) p.canJump = false;
+
+        // bounce pads
+        for (const b of bouncePads){ if (topCollision(p.mesh, b)) { p.vel.y = jumpSpeed * 1.45; showCenterMsg('Boing!'); } }
+
+        // lava
+        for (const l of lavaTiles){
+          // AABB simples na horizontal + altura baixa
+          const w=l.geometry.parameters.width/2, d=l.geometry.parameters.depth/2, bp=l.position;
+          if (p.mesh.position.x>bp.x-w && p.mesh.position.x<bp.x+w &&
+              p.mesh.position.z>bp.z-d && p.mesh.position.z<bp.z+d &&
+              p.mesh.position.y <= bp.y + 0.6){
+            respawnPlayer(p); showCenterMsg('🔥 Lava!');
+          }
+        }
+
+        // falling platforms lógica
+        for (const f of fallingPlatforms){
+          if (topCollision(p.mesh, f.mesh) && f.state==='idle'){ f.state='armed'; f.timer = t + 0.45; }
+          if (f.state==='armed' && t>f.timer){ f.state='falling'; }
+          if (f.state==='falling'){ f.mesh.position.y -= 0.08; if (f.mesh.position.y < -20) f.state='gone'; }
+        }
+
+        // rotators colisão (Box3 vs Box3)
+        tmpBoxP.setFromObject(p.mesh);
+        for (const r of rotators){
+          tmpBoxO.setFromObject(r);
+          if (tmpBoxP.intersectsBox(tmpBoxO)){
+            // bateu: empurra levemente e tira do chão
+            const dir = new THREE.Vector3().subVectors(p.mesh.position, r.position).setY(0).normalize();
+            p.mesh.position.addScaledVector(dir, 0.35);
+            p.vel.y = 0.5; p.canJump = false;
+          }
+        }
+
+        // checkpoints (círculo de detecção)
+        for (let i=0;i<checkpoints.length;i++){
+          const c = checkpoints[i];
+          const dx=p.mesh.position.x - c.x, dz=p.mesh.position.z - c.z;
+          if (dx*dx + dz*dz < 3.2*3.2){
+            if (p.checkpointIdx !== i+1){
+              p.checkpointIdx = i+1;
+              p.respawn.set(c.x, c.y+1.1, c.z);
+              updateHUD(); showCenterMsg('Checkpoint!');
             }
+          }
         }
-        
-        // Plataforma final (maior e diferente)
-        const finalPlatform = createPlatform(24, 0, 24, 6.12, 6.12, 0xff0000);
-        checkpoints.push(20); // Última plataforma como checkpoint
-        
-        // --- Inimigos (cilindros rotativos) --- 
-        const enemies = [];
-        function createEnemy(x, z, height = 2) {
-            const geometry = new THREE.CylinderGeometry(0.5, 0.5, height, 16);
-            const material = new THREE.MeshStandardMaterial({color: 0xff0000});
-            const enemy = new THREE.Mesh(geometry, material);
-            enemy.position.set(x, height/2, z);
-            scene.add(enemy);
-            enemies.push(enemy);
-            return enemy;
-        }
-        
-        // Adicionar alguns inimigos
-        createEnemy(6, 2);
-        createEnemy(12, 8);
-        createEnemy(18, 14);
-        createEnemy(6, 20);
-        
-        // --- Controles e física --- 
-        const gravity = 0.05;
-        let currentCameraTarget = 0; // 0: visão geral, 1: jogador 1, 2: jogador 2
-        
-        function startGame() {
-            gameStarted = true;
-            overlay.style.display = 'none';
-            player1Info.style.display = 'block';
-            player2Info.style.display = 'block';
-        }
-        
-        function restartGame() {
-            document.location.reload();
-        }
-        
-        function updatePlayerInfo() {
-            player1Info.textContent = `Jogador 1: ${players[0].checkpoint}/20`;
-            player2Info.textContent = `Jogador 2: ${players[1].checkpoint}/20`;
-            
-            // Verificar se ambos terminaram
-            if (players[0].finished && players[1].finished) {
-                gameOver = true;
-                overlay.style.display = 'flex';
-                overlay.innerHTML = `
-                    <h1>🎉 Fim de Jogo!</h1>
-                    <p>Jogador 1: ${players[0].checkpoint}/20 plataformas</p>
-                    <p>Jogador 2: ${players[1].checkpoint}/20 plataformas</p>
-                    <p>Pressione ENTER ou ESPAÇO para reiniciar</p>
-                `;
-            }
-        }
-        
-        // Inicializar informações dos jogadores
-        updatePlayerInfo();
-        
-        // Função de animação
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            if(gameStarted && !gameOver) {
-                // Rotacionar inimigos
-                enemies.forEach(enemy => {
-                    enemy.rotation.y += 0.02;
-                });
-                
-                // Atualizar cada jogador
-                players.forEach((player, index) => {
-                    const mesh = player.mesh;
-                    const velocity = player.velocity;
-                    let canJump = player.canJump;
-                    
-                    // Movimento baseado no jogador
-                    if (index === 0) { // Jogador 1 - WASD
-                        if(keys['w'] || keys['arrowup']) velocity.z = -0.2;
-                        if(keys['s'] || keys['arrowdown']) velocity.z = 0.2;
-                        if(keys['a'] || keys['arrowleft']) velocity.x = -0.2;
-                        if(keys['d'] || keys['arrowright']) velocity.x = 0.2;
-                    } else { // Jogador 2 - Setas
-                        if(keys['arrowup']) velocity.z = -0.2;
-                        if(keys['arrowdown']) velocity.z = 0.2;
-                        if(keys['arrowleft']) velocity.x = -0.2;
-                        if(keys['arrowright']) velocity.x = 0.2;
-                    }
-                    
-                    // Aplicar velocidade e desaceleração
-                    mesh.position.x += velocity.x;
-                    mesh.position.z += velocity.z;
-                    velocity.x *= 0.9;
-                    velocity.z *= 0.9;
-                    
-                    // Gravidade
-                    velocity.y -= gravity;
-                    mesh.position.y += velocity.y;
-                    
-                    // Verificar colisão com o chão e plataformas
-                    if(mesh.position.y < 0.5) {
-                        mesh.position.y = 0.5;
-                        velocity.y = 0;
-                        canJump = true;
-                    }
-                    
-                    player.canJump = canJump;
-                    
-                    // Verificar colisão com plataformas
-                    let onPlatform = false;
-                    let currentCheckpoint = player.checkpoint;
-                    
-                    platforms.forEach((p, i) => {
-                        const px = p.position.x, py = p.position.y, pz = p.position.z;
-                        const platformHalfWidth = p.geometry.parameters.width / 2;
-                        const platformHalfDepth = p.geometry.parameters.depth / 2;
-                        
-                        if(mesh.position.x > px-platformHalfWidth && mesh.position.x < px+platformHalfWidth &&
-                           mesh.position.z > pz-platformHalfDepth && mesh.position.z < pz+platformHalfDepth &&
-                           mesh.position.y > py && mesh.position.y < py + 0.5 + 0.5) {
-                            mesh.position.y = py + 0.5;
-                            velocity.y = 0;
-                            player.canJump = true;
-                            onPlatform = true;
-                            
-                            // Atualizar checkpoint se for uma plataforma à frente
-                            if (i > currentCheckpoint) {
-                                player.checkpoint = i;
-                                updatePlayerInfo();
-                                
-                                // Verificar se chegou ao final
-                                if (i === platforms.length - 1) {
-                                    player.finished = true;
-                                    p.material.color.set(0x00ff00); // Mudar cor para verde
-                                }
-                            }
-                        }
-                    });
-                    
-                    // Se não está em nenhuma plataforma, aplicar gravidade
-                    if (!onPlatform && mesh.position.y > 0.5) {
-                        player.canJump = false;
-                    }
-                    
-                    // Verificar colisão com inimigos
-                    enemies.forEach(enemy => {
-                        const dx = mesh.position.x - enemy.position.x;
-                        const dz = mesh.position.z - enemy.position.z;
-                        const distance = Math.sqrt(dx*dx + dz*dz);
-                        
-                        if(distance < 1.2) { // Colisão com inimigo
-                            // Resetar para o último checkpoint
-                            const checkpointIndex = player.checkpoint;
-                            const checkpointPlatform = platforms[checkpointIndex];
-                            
-                            mesh.position.set(
-                                checkpointPlatform.position.x,
-                                checkpointPlatform.position.y + 1,
-                                checkpointPlatform.position.z
-                            );
-                            
-                            velocity.x = 0;
-                            velocity.y = 0;
-                            velocity.z = 0;
-                        }
-                    });
-                    
-                    // Pular (controles diferentes para cada jogador)
-                    if (index === 0 && (keys[' ']) && player.canJump) {
-                        velocity.y = 0.8;
-                        player.canJump = false;
-                    }
-                    
-                    if (index === 1 && (keys['enter']) && player.canJump) {
-                        velocity.y = 0.8;
-                        player.canJump = false;
-                    }
-                });
-                
-                // Controle de câmera - alternar com a tecla C
-                if (keys['c']) {
-                    currentCameraTarget = (currentCameraTarget + 1) % 3;
-                    keys['c'] = false; // Para não alternar várias vezes seguidas
-                }
-                
-                // Posicionar a câmera baseado no alvo selecionado
-                if (currentCameraTarget === 0) {
-                    // Visão geral dos dois jogadores
-                    const midX = (player1.position.x + player2.position.x) / 2;
-                    const midZ = (player1.position.z + player2.position.z) / 2;
-                    const maxY = Math.max(player1.position.y, player2.position.y);
-                    
-                    camera.position.x = midX;
-                    camera.position.z = midZ + 15;
-                    camera.position.y = maxY + 8;
-                    camera.lookAt(midX, maxY, midZ);
-                } else {
-                    // Focar em um jogador específico
-                    const targetPlayer = players[currentCameraTarget - 1];
-                    camera.position.x = targetPlayer.mesh.position.x;
-                    camera.position.z = targetPlayer.mesh.position.z + 10;
-                    camera.position.y = targetPlayer.mesh.position.y + 5;
-                    camera.lookAt(targetPlayer.mesh.position);
-                }
-            }
-            
-            renderer.render(scene, camera);
-        }
-        
-        animate();
-        
-        // Ajustar tamanho ao redimensionar janela
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
+      }
+
+      // câmera: foca no meio dos dois jogadores
+      const midX = (p1.mesh.position.x + p2.mesh.position.x)/2;
+      const midY = (p1.mesh.position.y + p2.mesh.position.y)/2;
+      const midZ = (p1.mesh.position.z + p2.mesh.position.z)/2;
+      camera.position.set(midX, midY + 6.5, midZ + 12);
+      camera.lookAt(midX, midY + 0.5, midZ);
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // ======== Resize ========
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
 </body>
 </html>
+
+
