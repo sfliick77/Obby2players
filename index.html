@@ -39,8 +39,10 @@
   </div>
   <div id="info">Jogador 1: WASD + Espaço | Jogador 2: Setas + Numpad 0</div>
 
-  <!-- Áudio de fundo -->
-  <audio id="bg-music" preload="auto"></audio>
+  <!-- Áudio de fundo único -->
+  <audio id="bg-music" loop>
+    <source src="https://github.com/sfliick77/Relaxed-scene/raw/main/Relaxed Scene(MP3_160K).mp3" type="audio/mpeg">
+  </audio>
 
   <audio id="death-sound">
     <source src="https://github.com/sfliick77/Roblox-off-sound/raw/main/Roblox%20Death%20Sound%20-%20OOF%20_%20Sound%20Effect%20HD%20-%20HomeMadeSoundEffects(MP3_160K).mp3" type="audio/mpeg">
@@ -57,24 +59,6 @@
     const bgMusic = document.getElementById("bg-music");
     const deathSound = document.getElementById("death-sound");
 
-    // --- Playlist ---
-    const playlist = [
-      "https://github.com/sfliick77/M-sica-de-fundo/raw/main/Envici%20November%20-%20Original%20Instrument(MP3_160K).mp3",
-      "https://github.com/sfliick77/Relaxed-scene/raw/main/Relaxed%20Scene(MP3_160K).mp3"
-    ];
-    let currentTrack = 0;
-
-    function playMusic() {
-      bgMusic.src = playlist[currentTrack];
-      bgMusic.volume = 0.3;
-      bgMusic.play();
-    }
-
-    bgMusic.addEventListener("ended", () => {
-      currentTrack = (currentTrack + 1) % playlist.length;
-      playMusic();
-    });
-
     // --- Teclas ---
     const keys = {};
     window.addEventListener('keydown', e => {
@@ -84,7 +68,7 @@
         gameStarted = true;
         overlay.style.display = "none";
         info.style.display = "block";
-        if(bgMusic.paused){ playMusic(); }
+        if(bgMusic.paused){ bgMusic.volume = 0.3; bgMusic.play(); }
       }
 
       if(gameOver && e.key === "Enter"){
@@ -179,6 +163,8 @@
         players.forEach(p=>{
           const {mesh, velocity, controls} = p;
           let moveX=0, moveZ=0;
+
+          // --- Controles independentes ---
           if(keys[controls.left]) moveX -= 1;
           if(keys[controls.right]) moveX += 1;
           if(keys[controls.forward]) moveZ -= 1;
@@ -196,8 +182,10 @@
 
           platforms.forEach(plat=>{
             const px=plat.position.x, py=plat.position.y, pz=plat.position.z;
-            if(mesh.position.x > px-plat.geometry.parameters.width/2 && mesh.position.x < px+plat.geometry.parameters.width/2 &&
-               mesh.position.z > pz-plat.geometry.parameters.depth/2 && mesh.position.z < pz+plat.geometry.parameters.depth/2 &&
+            const halfW = plat.geometry.parameters.width/2;
+            const halfD = plat.geometry.parameters.depth/2;
+            if(mesh.position.x > px-halfW && mesh.position.x < px+halfW &&
+               mesh.position.z > pz-halfD && mesh.position.z < pz+halfD &&
                mesh.position.y > py && mesh.position.y < py+0.5){
               mesh.position.y = py+1;
               velocity.y=0;
@@ -232,3 +220,4 @@
   </script>
 </body>
 </html>
+
