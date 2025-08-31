@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -39,9 +39,8 @@
   </div>
   <div id="info">Jogador 1: WASD + Espaço | Jogador 2: Setas + Numpad 0</div>
 
-  <audio id="bg-music" loop>
-    <source src="https://github.com/sfliick77/M-sica-de-fundo/raw/main/Envici%20November%20-%20Original%20Instrument(MP3_160K).mp3" type="audio/mpeg">
-  </audio>
+  <!-- Áudio de fundo (playlist será controlada via JS) -->
+  <audio id="bg-music" preload="auto"></audio>
 
   <audio id="death-sound">
     <source src="https://github.com/sfliick77/Roblox-off-sound/raw/main/Roblox%20Death%20Sound%20-%20OOF%20_%20Sound%20Effect%20HD%20-%20HomeMadeSoundEffects(MP3_160K).mp3" type="audio/mpeg">
@@ -58,6 +57,25 @@
     const bgMusic = document.getElementById("bg-music");
     const deathSound = document.getElementById("death-sound");
 
+    // --- Playlist ---
+    const playlist = [
+      "https://github.com/sfliick77/M-sica-de-fundo/raw/main/Envici%20November%20-%20Original%20Instrument(MP3_160K).mp3",
+      "https://github.com/sfliick77/Relaxed-scene/raw/main/Relaxed%20Scene(MP3_160K).mp3"
+    ];
+    let currentTrack = 0;
+
+    function playMusic() {
+      bgMusic.src = playlist[currentTrack];
+      bgMusic.volume = 0.3;
+      bgMusic.play();
+    }
+
+    bgMusic.addEventListener("ended", () => {
+      currentTrack = (currentTrack + 1) % playlist.length;
+      playMusic();
+    });
+
+    // --- Teclas ---
     const keys = {};
     window.addEventListener('keydown', e => {
       keys[e.key.toLowerCase()] = true;
@@ -66,7 +84,7 @@
         gameStarted = true;
         overlay.style.display = "none";
         info.style.display = "block";
-        if(bgMusic.paused){ bgMusic.volume = 0.3; bgMusic.play(); }
+        if(bgMusic.paused){ playMusic(); }
       }
 
       if(gameOver && e.key === "Enter"){
@@ -207,5 +225,4 @@
     animate();
   </script>
 </body>
-</html>            
-            
+</html>
