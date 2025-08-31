@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -39,7 +39,7 @@
   </div>
   <div id="info">Jogador 1: WASD + Espaço | Jogador 2: Setas + Numpad 0</div>
 
-  <!-- Áudio de fundo (playlist será controlada via JS) -->
+  <!-- Áudio de fundo -->
   <audio id="bg-music" preload="auto"></audio>
 
   <audio id="death-sound">
@@ -114,21 +114,21 @@
     scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
     // Jogadores
-    function createPlayer(color, x){
+    function createPlayer(color){
       const geo = new THREE.BoxGeometry(1,1,1);
       const mat = new THREE.MeshStandardMaterial({color});
       const mesh = new THREE.Mesh(geo,mat);
-      mesh.position.set(x,1,0);
+      mesh.position.set(0,1,0); // ambos começam no mesmo lugar
       scene.add(mesh);
       return mesh;
     }
 
-    const player1 = createPlayer(0xff5555, -2); // vermelho
-    const player2 = createPlayer(0x5555ff,  2); // azul
+    const player1 = createPlayer(0xff5555); // vermelho
+    const player2 = createPlayer(0x5555ff); // azul
 
     const players = [
       { mesh: player1, velocity: new THREE.Vector3(), canJump: false, controls: {left:"a", right:"d", forward:"w", back:"s", jump:" "} },
-      { mesh: player2, velocity: new THREE.Vector3(), canJump: false, controls: {left:"arrowleft", right:"arrowright", forward:"arrowup", back:"arrowdown", jump:"0"} } // Numpad 0
+      { mesh: player2, velocity: new THREE.Vector3(), canJump: false, controls: {left:"arrowleft", right:"arrowright", forward:"arrowup", back:"arrowdown", jump:"0"} }
     ];
 
     // Plataformas
@@ -141,7 +141,12 @@
       scene.add(plat);
       platforms.push(plat);
     }
-    for(let i=0; i<30; i++){
+
+    // --- Plataforma inicial 9x9 ---
+    createPlatform(0,0,0,9,9,0x00ff00);
+
+    // --- Outras plataformas ---
+    for(let i=1; i<30; i++){
       const x = (Math.random()*6)-3;
       const y = i*1.5;
       const z = -i*5;
@@ -161,8 +166,9 @@
       overlay.style.display = "none";
       info.style.display = "block";
 
-      player1.position.set(-2,1,0);
-      player2.position.set( 2,1,0);
+      // Ambos jogadores no mesmo lugar
+      player1.position.set(0,1,0);
+      player2.position.set(0,1,0);
       players.forEach(p => p.velocity.set(0,0,0));
     }
 
@@ -190,8 +196,8 @@
 
           platforms.forEach(plat=>{
             const px=plat.position.x, py=plat.position.y, pz=plat.position.z;
-            if(mesh.position.x > px-2 && mesh.position.x < px+2 &&
-               mesh.position.z > pz-2 && mesh.position.z < pz+2 &&
+            if(mesh.position.x > px-plat.geometry.parameters.width/2 && mesh.position.x < px+plat.geometry.parameters.width/2 &&
+               mesh.position.z > pz-plat.geometry.parameters.depth/2 && mesh.position.z < pz+plat.geometry.parameters.depth/2 &&
                mesh.position.y > py && mesh.position.y < py+0.5){
               mesh.position.y = py+1;
               velocity.y=0;
