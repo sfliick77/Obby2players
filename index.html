@@ -1,535 +1,211 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Obby 3D - 2 Jogadores</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            font-family: Arial, sans-serif;
-        } 
-        canvas { 
-            display: block; 
-        } 
-        #overlay { 
-            position: absolute; 
-            top:0; 
-            left:0; 
-            width:100%; 
-            height:100%; 
-            background: rgba(0,0,0,0.8); 
-            color: white; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            flex-direction: column; 
-            font-size: 24px; 
-            z-index: 10; 
-        } 
-        #info { 
-            position: absolute; 
-            top: 10px; 
-            left: 10px; 
-            color: #fff; 
-            font-size: 18px; 
-            text-shadow: 1px 1px 3px #000; 
-            display: none; 
-        }
-        #player-info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #fff;
-            font-size: 16px;
-            text-shadow: 1px 1px 3px #000;
-            background: rgba(0,0,0,0.6);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        /* Menu de opções */ 
-        #menu-btn { 
-            position: absolute; 
-            top: 15px; 
-            right: 15px; 
-            background: rgba(0,0,0,0.6); 
-            color: white; 
-            border: 1px solid #fff; 
-            border-radius: 5px; 
-            padding: 8px 15px; 
-            cursor: pointer; 
-            z-index: 20; 
-            transition: background 0.3s; 
-        } 
-        #menu-btn:hover { 
-            background: rgba(0,0,0,0.8); 
-        } 
-        #options-menu { 
-            position: absolute; 
-            top: 50px; 
-            right: 15px; 
-            background: rgba(0,0,0,0.8); 
-            border: 1px solid #fff; 
-            border-radius: 5px; 
-            padding: 15px; 
-            color: white; 
-            z-index: 20; 
-            display: none; 
-            flex-direction: column; 
-            gap: 10px; 
-            min-width: 150px; 
-        } 
-        .menu-option { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            cursor: pointer; 
-        } 
-        .menu-option input[type="checkbox"] { 
-            margin: 0; 
-        }
-        .player-indicator {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            z-index: 5;
-        }
-        #player1-indicator {
-            background-color: #ff5555;
-            top: 15px;
-            left: 15px;
-        }
-        #player2-indicator {
-            background-color: #5555ff;
-            top: 15px;
-            left: 45px;
-        }
-        .player-label {
-            position: absolute;
-            margin-left: 25px;
-            margin-top: -2px;
-            font-size: 14px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Mini Obby 3D - 2 Jogadores</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+    #overlay {
+      position: absolute;
+      top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+      z-index: 10;
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      text-shadow: 1px 1px 3px #000;
+      display: none;
+    }
+  </style>
 </head>
 <body>
-    <div id="overlay">
-        <h1>🏃 Mini Obby 3D - 2 Jogadores</h1>
-        <p>Pressione ENTER para começar</p>
-        <p>Jogador 1: WASD para mover, Espaço para pular</p>
-        <p>Jogador 2: Setas para mover, M para pular</p>
-    </div>
-    
-    <div id="info"></div>
-    
-    <div id="player-info" style="display: none;">
-        <div id="player1-indicator" class="player-indicator"></div>
-        <div class="player-label">Jogador 1</div>
-        <div id="player2-indicator" class="player-indicator"></div>
-        <div class="player-label" style="left: 75px;">Jogador 2</div>
-    </div>
-    
-    <button id="menu-btn">☰ Menu</button>
-    
-    <div id="options-menu">
-        <label class="menu-option">
-            <input type="checkbox" id="lite-mode"> Modo Lite
-        </label>
-        <label class="menu-option">
-            <input type="checkbox" id="two-players" checked> 2 Jogadores
-        </label>
-    </div>
+  <div id="overlay">
+    <h1>🏃 Mini Obby 3D - 2 Jogadores</h1>
+    <p>Pressione <b>ENTER</b> para começar</p>
+  </div>
+  <div id="info">Jogador 1: WASD + Espaço | Jogador 2: Setas + Numpad 0</div>
 
-    <script>
-        // --- Variáveis do jogo --- 
-        let gameStarted = false;
-        let gameOver = false;
-        let liteMode = false;
-        let twoPlayersMode = true;
-        let player1Finished = false;
-        let player2Finished = false;
-        
-        const overlay = document.getElementById('overlay');
-        const info = document.getElementById('info');
-        const playerInfo = document.getElementById('player-info');
-        const menuBtn = document.getElementById('menu-btn');
-        const optionsMenu = document.getElementById('options-menu');
-        const liteModeToggle = document.getElementById('lite-mode');
-        const twoPlayersToggle = document.getElementById('two-players');
+  <audio id="bg-music" loop>
+    <source src="https://github.com/sfliick77/M-sica-de-fundo/raw/main/Envici%20November%20-%20Original%20Instrument(MP3_160K).mp3" type="audio/mpeg">
+  </audio>
 
-        // Menu toggle
-        menuBtn.addEventListener('click', () => {
-            optionsMenu.style.display = optionsMenu.style.display === 'flex' ? 'none' : 'flex';
+  <audio id="death-sound">
+    <source src="https://github.com/sfliick77/Roblox-off-sound/raw/main/Roblox%20Death%20Sound%20-%20OOF%20_%20Sound%20Effect%20HD%20-%20HomeMadeSoundEffects(MP3_160K).mp3" type="audio/mpeg">
+  </audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <script>
+    // --- Variáveis ---
+    let gameStarted = false;
+    let gameOver = false;
+
+    const overlay = document.getElementById('overlay');
+    const info = document.getElementById('info');
+    const bgMusic = document.getElementById("bg-music");
+    const deathSound = document.getElementById("death-sound");
+
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.key.toLowerCase()] = true;
+
+      if(!gameStarted && !gameOver && e.key === "Enter"){
+        gameStarted = true;
+        overlay.style.display = "none";
+        info.style.display = "block";
+        if(bgMusic.paused){ bgMusic.volume = 0.3; bgMusic.play(); }
+      }
+
+      if(gameOver && e.key === "Enter"){
+        restartGame();
+      }
+    });
+    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+    // --- Cena ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Fundo
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      'https://raw.githubusercontent.com/sfliick77/Background-c-u/main/277fba7bc86484d9f6cf37c87ee44de2.jpg',
+      texture => scene.background = texture
+    );
+
+    // Luz
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(5,10,7);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+    // Jogadores
+    function createPlayer(color, x){
+      const geo = new THREE.BoxGeometry(1,1,1);
+      const mat = new THREE.MeshStandardMaterial({color});
+      const mesh = new THREE.Mesh(geo,mat);
+      mesh.position.set(x,1,0);
+      scene.add(mesh);
+      return mesh;
+    }
+
+    const player1 = createPlayer(0xff5555, -2); // vermelho
+    const player2 = createPlayer(0x5555ff,  2); // azul
+
+    const players = [
+      { mesh: player1, velocity: new THREE.Vector3(), canJump: false, controls: {left:"a", right:"d", forward:"w", back:"s", jump:" "} },
+      { mesh: player2, velocity: new THREE.Vector3(), canJump: false, controls: {left:"arrowleft", right:"arrowright", forward:"arrowup", back:"arrowdown", jump:"0"} } // Numpad 0
+    ];
+
+    // Plataformas
+    const platforms = [];
+    function createPlatform(x,y,z,width=4,depth=4,color=0x00ff00){
+      const geo = new THREE.BoxGeometry(width,0.5,depth);
+      const mat = new THREE.MeshStandardMaterial({color});
+      const plat = new THREE.Mesh(geo,mat);
+      plat.position.set(x,y,z);
+      scene.add(plat);
+      platforms.push(plat);
+    }
+    for(let i=0; i<30; i++){
+      const x = (Math.random()*6)-3;
+      const y = i*1.5;
+      const z = -i*5;
+      const color = new THREE.Color(`hsl(${i*12},80%,50%)`).getHex();
+      createPlatform(x,y,z,4,4,color);
+    }
+
+    // Físicas
+    const gravity = -0.05;
+    const speed = 0.16;
+
+    camera.position.set(0,8,15);
+
+    function restartGame(){
+      gameOver = false;
+      gameStarted = true;
+      overlay.style.display = "none";
+      info.style.display = "block";
+
+      player1.position.set(-2,1,0);
+      player2.position.set( 2,1,0);
+      players.forEach(p => p.velocity.set(0,0,0));
+    }
+
+    // Loop
+    function animate(){
+      requestAnimationFrame(animate);
+      if(gameStarted && !gameOver){
+        players.forEach(p=>{
+          const {mesh, velocity, controls} = p;
+          let moveX=0, moveZ=0;
+          if(keys[controls.left]) moveX -= 1;
+          if(keys[controls.right]) moveX += 1;
+          if(keys[controls.forward]) moveZ -= 1;
+          if(keys[controls.back]) moveZ += 1;
+
+          if(moveX!==0||moveZ!==0){
+            const len = Math.sqrt(moveX*moveX+moveZ*moveZ);
+            mesh.position.x += (moveX/len)*speed;
+            mesh.position.z += (moveZ/len)*speed;
+          }
+
+          velocity.y += gravity;
+          mesh.position.y += velocity.y;
+          p.canJump = false;
+
+          platforms.forEach(plat=>{
+            const px=plat.position.x, py=plat.position.y, pz=plat.position.z;
+            if(mesh.position.x > px-2 && mesh.position.x < px+2 &&
+               mesh.position.z > pz-2 && mesh.position.z < pz+2 &&
+               mesh.position.y > py && mesh.position.y < py+0.5){
+              mesh.position.y = py+1;
+              velocity.y=0;
+              p.canJump=true;
+            }
+          });
+
+          if(keys[controls.jump] && p.canJump){
+            velocity.y=0.8;
+          }
+
+          if(mesh.position.y < -2){
+            gameOver = true;
+            gameStarted = false;
+            overlay.style.display = "flex";
+            overlay.innerHTML = `<h1>💀 Game Over!</h1><p>Pressione <b>ENTER</b> para reiniciar</p>`;
+            deathSound.play();
+          }
         });
 
-        // Modo Lite
-        liteModeToggle.addEventListener('change', () => {
-            liteMode = liteModeToggle.checked;
-            applyLiteMode();
-        });
+        // Câmera média dos 2 jogadores
+        const midX = (player1.position.x+player2.position.x)/2;
+        const midY = (player1.position.y+player2.position.y)/2;
+        const midZ = (player1.position.z+player2.position.z)/2;
+        camera.position.set(midX, midY+6, midZ+12);
+        camera.lookAt(midX, midY, midZ);
+      }
 
-        // Modo 2 Jogadores
-        twoPlayersToggle.addEventListener('change', () => {
-            twoPlayersMode = twoPlayersToggle.checked;
-            if (!twoPlayersMode && gameStarted) {
-                // Se desativar o modo de 2 jogadores durante o jogo, remover o jogador 2
-                scene.remove(player2);
-                playerInfo.style.display = 'none';
-            } else if (twoPlayersMode && gameStarted) {
-                // Se ativar o modo de 2 jogadores durante o jogo, adicionar o jogador 2
-                scene.add(player2);
-                playerInfo.style.display = 'block';
-            }
-        });
-
-        function applyLiteMode() {
-            if (liteMode) {
-                player1Material.wireframe = true;
-                player2Material.wireframe = true;
-                platforms.forEach(platform => {
-                    platform.material.wireframe = true;
-                });
-                scene.background = null;
-                scene.background = new THREE.Color(0x222222);
-            } else {
-                player1Material.wireframe = false;
-                player2Material.wireframe = false;
-                platforms.forEach(platform => {
-                    platform.material.wireframe = false;
-                });
-                // Restaurar textura de fundo
-                loader.load(
-                    'https://raw.githubusercontent.com/sfliick77/Background-c-u/main/277fba7bc86484d9f6cf37c87ee44de2.jpg',
-                    function(texture){
-                        scene.background = texture;
-                    }
-                );
-            }
-        }
-
-        // Sistema de teclas melhorado
-        const keys = {};
-        window.addEventListener('keydown', e => {
-            const key = e.key.toLowerCase();
-            keys[key] = true;
-            
-            // Começar jogo
-            if(!gameStarted && !gameOver && (key === "enter" || key === " ")){
-                startGame();
-            }
-            
-            // Reiniciar
-            if(gameOver && (key === "enter" || key === " ")){
-                restartGame();
-            }
-        });
-
-        window.addEventListener('keyup', e => {
-            const key = e.key.toLowerCase();
-            keys[key] = false;
-        });
-
-        // Prevenir comportamento padrão das teclas de direção e espaço
-        window.addEventListener('keydown', e => {
-            if([' ', 'm', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) {
-                e.preventDefault();
-            }
-        });
-
-        // --- Cena e câmera --- 
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({antialias:true});
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // --- Fundo --- 
-        const loader = new THREE.TextureLoader();
-        loader.load(
-            'https://raw.githubusercontent.com/sfliick77/Background-c-u/main/277fba7bc86484d9f6cf37c87ee44de2.jpg',
-            function(texture){
-                scene.background = texture;
-            }
-        );
-
-        // --- Luzes --- 
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(5,10,7);
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-
-        // --- Jogadores (2% maior) --- 
-        // Jogador 1 (vermelho)
-        const player1Geometry = new THREE.BoxGeometry(1.02, 1.02, 1.02);
-        const player1Material = new THREE.MeshStandardMaterial({color: 0xff5555});
-        const player1 = new THREE.Mesh(player1Geometry, player1Material);
-        player1.position.set(-1, 1, 0);
-        scene.add(player1);
-
-        // Jogador 2 (azul)
-        const player2Geometry = new THREE.BoxGeometry(1.02, 1.02, 1.02);
-        const player2Material = new THREE.MeshStandardMaterial({color: 0x5555ff});
-        const player2 = new THREE.Mesh(player2Geometry, player2Material);
-        player2.position.set(1, 1, 0);
-        scene.add(player2);
-
-        // Velocidades dos jogadores
-        const velocity1 = { x: 0, y: 0, z: 0 };
-        const velocity2 = { x: 0, y: 0, z: 0 };
-        
-        // Estados dos jogadores
-        let canJump1 = false;
-        let canJump2 = false;
-
-        // --- Plataformas (2% maiores) --- 
-        const platforms = [];
-        const finishPlatforms = [];
-
-        function createPlatform(x, y, z, width = 3.06, depth = 3.06, color = 0x00ff00) {
-            const geo = new THREE.BoxGeometry(width, 0.51, depth);
-            const mat = new THREE.MeshStandardMaterial({color: color});
-            const plat = new THREE.Mesh(geo, mat);
-            plat.position.set(x, y, z);
-            scene.add(plat);
-            platforms.push(plat);
-            return plat;
-        }
-
-        function createFinishPlatform(x, y, z, width = 3.06, depth = 3.06) {
-            const plat = createPlatform(x, y, z, width, depth, 0xffff00);
-            finishPlatforms.push(plat);
-            return plat;
-        }
-
-        // Criar plataformas tipo Obby com cores variando (2% mais distantes)
-        for(let i = 0; i < 20; i++) {
-            const x = i % 2 === 0 ? 0 : (Math.random() - 0.5) * 10;
-            const z = -i * 4.08; // 2% mais distante
-            const color = new THREE.Color().setHSL(i/20, 0.8, 0.5);
-            
-            if(i === 19) {
-                // Última plataforma é a de finalização
-                createFinishPlatform(x, 0, z, 6.12, 6.12);
-            } else {
-                createPlatform(x, 0, z, 3.06, 3.06, color);
-            }
-        }
-
-        // --- Funções do jogo --- 
-        function startGame() {
-            gameStarted = true;
-            overlay.style.display = 'none';
-            info.style.display = 'block';
-            playerInfo.style.display = 'block';
-        }
-
-        function restartGame() {
-            window.location.reload();
-        }
-
-        function checkPlayerFinish(player, playerNum) {
-            for(const p of finishPlatforms) {
-                const px = p.position.x, py = p.position.y, pz = p.position.z;
-                const platformHalfWidth = p.geometry.parameters.width / 2;
-                const platformHalfDepth = p.geometry.parameters.depth / 2;
-                
-                if(player.position.x > px-platformHalfWidth && player.position.x < px+platformHalfWidth &&
-                   player.position.z > pz-platformHalfDepth && player.position.z < pz+platformHalfDepth &&
-                   player.position.y > py && player.position.y < py+2) {
-                   
-                    if(playerNum === 1) player1Finished = true;
-                    if(playerNum === 2) player2Finished = true;
-                    
-                    // Verificar se ambos terminaram (no modo 2 jogadores)
-                    if(twoPlayersMode) {
-                        if(player1Finished && player2Finished) {
-                            gameOver = true;
-                            overlay.style.display = 'flex';
-                            overlay.innerHTML = `
-                                <h1>🎉 Todos completaram!</h1>
-                                <p>Pressione ENTER ou ESPAÇO para reiniciar</p>
-                            `;
-                        } else if(player1Finished) {
-                            info.innerHTML = `Jogador 1 completou! Esperando Jogador 2...`;
-                        } else if(player2Finished) {
-                            info.innerHTML = `Jogador 2 completou! Esperando Jogador 1...`;
-                        }
-                    } else {
-                        // Modo single player
-                        gameOver = true;
-                        overlay.style.display = 'flex';
-                        overlay.innerHTML = `
-                            <h1>🎉 Parabéns!</h1>
-                            <p>Pressione ENTER ou ESPAÇO para reiniciar</p>
-                        `;
-                    }
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function checkPlayerFall(player, playerNum) {
-            if(player.position.y < -10) {
-                if(twoPlayersMode) {
-                    // Reposicionar o jogador que caiu
-                    player.position.set(playerNum === 1 ? -1 : 1, 5, 0);
-                    if(playerNum === 1) {
-                        velocity1.x = velocity1.y = velocity1.z = 0;
-                    } else {
-                        velocity2.x = velocity2.y = velocity2.z = 0;
-                    }
-                } else {
-                    // Game over no modo single player
-                    gameOver = true;
-                    overlay.style.display = 'flex';
-                    overlay.innerHTML = `
-                        <h1>💀 Game Over!</h1>
-                        <p>Pressione ENTER ou ESPAÇO para reiniciar</p>
-                    `;
-                }
-                return true;
-            }
-            return false;
-        }
-
-        // --- Loop de animação --- 
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            if(gameStarted && !gameOver) {
-                // Atualizar jogador 1
-                if(keys['w'] || keys['arrowup']) velocity1.z = -0.2;
-                if(keys['s'] || keys['arrowdown']) velocity1.z = 0.2;
-                if(keys['a'] || keys['arrowleft']) velocity1.x = -0.2;
-                if(keys['d'] || keys['arrowright']) velocity1.x = 0.2;
-                
-                // Aplicar física ao jogador 1
-                player1.position.x += velocity1.x;
-                player1.position.z += velocity1.z;
-                player1.position.y += velocity1.y;
-                
-                velocity1.x *= 0.9; // Fricção
-                velocity1.z *= 0.9; // Fricção
-                velocity1.y -= 0.03; // Gravidade
-                
-                // Verificar colisões do jogador 1
-                canJump1 = false;
-                for(const p of platforms) {
-                    const px = p.position.x, py = p.position.y, pz = p.position.z;
-                    const platformHalfWidth = p.geometry.parameters.width / 2;
-                    const platformHalfDepth = p.geometry.parameters.depth / 2;
-                    
-                    if(player1.position.x > px-platformHalfWidth && player1.position.x < px+platformHalfWidth &&
-                       player1.position.z > pz-platformHalfDepth && player1.position.z < pz+platformHalfDepth &&
-                       player1.position.y > py && player1.position.y < py+1) {
-                       
-                        velocity1.y = 0;
-                        player1.position.y = py+0.51;
-                        canJump1 = true;
-                    }
-                }
-                
-                // Pular jogador 1 (espaço)
-                if(keys[' '] && canJump1) {
-                    velocity1.y = 0.8;
-                }
-                
-                // Verificar se jogador 1 terminou ou caiu
-                if(!checkPlayerFinish(player1, 1)) {
-                    checkPlayerFall(player1, 1);
-                }
-                
-                // Atualizar jogador 2 (se estiver no modo de 2 jogadores)
-                if(twoPlayersMode) {
-                    if(keys['arrowup']) velocity2.z = -0.2;
-                    if(keys['arrowdown']) velocity2.z = 0.2;
-                    if(keys['arrowleft']) velocity2.x = -0.2;
-                    if(keys['arrowright']) velocity2.x = 0.2;
-                    
-                    // Aplicar física ao jogador 2
-                    player2.position.x += velocity2.x;
-                    player2.position.z += velocity2.z;
-                    player2.position.y += velocity2.y;
-                    
-                    velocity2.x *= 0.9; // Fricção
-                    velocity2.z *= 0.9; // Fricção
-                    velocity2.y -= 0.03; // Gravidade
-                    
-                    // Verificar colisões do jogador 2
-                    canJump2 = false;
-                    for(const p of platforms) {
-                        const px = p.position.x, py = p.position.y, pz = p.position.z;
-                        const platformHalfWidth = p.geometry.parameters.width / 2;
-                        const platformHalfDepth = p.geometry.parameters.depth / 2;
-                        
-                        if(player2.position.x > px-platformHalfWidth && player2.position.x < px+platformHalfWidth &&
-                           player2.position.z > pz-platformHalfDepth && player2.position.z < pz+platformHalfDepth &&
-                           player2.position.y > py && player2.position.y < py+1) {
-                           
-                            velocity2.y = 0;
-                            player2.position.y = py+0.51;
-                            canJump2 = true;
-                        }
-                    }
-                    
-                    // Pular jogador 2 (tecla M)
-                    if(keys['m'] && canJump2) {
-                        velocity2.y = 0.8;
-                    }
-                    
-                    // Verificar se jogador 2 terminou ou caiu
-                    if(!checkPlayerFinish(player2, 2)) {
-                        checkPlayerFall(player2, 2);
-                    }
-                }
-                
-                // Atualizar câmera para seguir ambos os jogadores
-                if(twoPlayersMode) {
-                    // Calcular ponto médio entre os dois jogadores
-                    const midX = (player1.position.x + player2.position.x) / 2;
-                    const midZ = (player1.position.z + player2.position.z) / 2;
-                    const midY = (player1.position.y + player2.position.y) / 2 + 5;
-                    
-                    // Calcular distância entre jogadores para ajustar o zoom
-                    const dist = Math.sqrt(
-                        Math.pow(player1.position.x - player2.position.x, 2) +
-                        Math.pow(player1.position.z - player2.position.z, 2)
-                    );
-                    
-                    // Ajustar a posição da câmera baseado na distância entre jogadores
-                    camera.position.set(midX, midY + dist * 0.2, midZ + 10 + dist * 0.3);
-                    camera.lookAt(midX, midY, midZ);
-                } else {
-                    // Modo single player - câmera segue apenas o jogador 1
-                    camera.position.x = player1.position.x;
-                    camera.position.z = player1.position.z + 10;
-                    camera.position.y = player1.position.y + 5;
-                    camera.lookAt(player1.position);
-                }
-                
-                // Atualizar informações na tela
-                if(twoPlayersMode) {
-                    info.innerHTML = `Jogador 1: ${Math.floor(player1.position.z/-4)}/20 | Jogador 2: ${Math.floor(player2.position.z/-4)}/20`;
-                } else {
-                    info.innerHTML = `Progresso: ${Math.floor(player1.position.z/-4)}/20`;
-                }
-            }
-            
-            renderer.render(scene, camera);
-        }
-        
-        animate();
-
-        // Ajustar tamanho ao redimensionar janela
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
+      renderer.render(scene,camera);
+    }
+    animate();
+  </script>
 </body>
-  </html>
+</html>            
+            
